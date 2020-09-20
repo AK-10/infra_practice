@@ -1,0 +1,48 @@
+# (静的)webサーバの構築
+
+## vagrantのたちあげ
+- `Vagrantfile` を記述
+- `$ vagrant up`で仮想環境が立ち上がる
+
+## sshでのログイン
+- key作成
+    - `$ ssh-keygen -t rsa`
+        - `.ssh` いかに作らないとダメだった(chmod 600とかしたけどダメ)
+
+- ~/.ssh/configに以下を記述(`$ vagrant ssh-configに出てくるのをちょっと改変`)
+```
+Host web_a
+    HostName 192.168.33.10
+    User vagrant
+    IdentityFile {your_secret_key_path}
+    Port 22
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    PasswordAuthentication no
+    IdentitiesOnly yes
+    LogLevel FATAL
+```
+- `$ ssh web_a`でログイン
+
+## Web Aへのnginxのインストール
+### Ansibleの導入
+- コントロールマシンに入っていれば良いらしいので(今回はmac),mac側にインストールする
+    - `$ brew install ansible`
+
+### 疎通確認
+- `$ ansible 192.168.33.10 -m ping -u vagrant`
+    - `-u` リモートユーザの指定, 指定しない場合コントロールマシンでログインしているユーザになる
+
+
+### Ansibleを用いたnginxのインストール
+- playbookを書く(task01/provisioning/setup.yml)
+- `ansible-playbook setup.yml -i ./hosts` (/provisioning にて)
+
+# DNSサーバの構築
+
+# アプリケーションサーバの構築
+
+# データベースサーバの構築
+
+# MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
+
