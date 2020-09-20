@@ -1,6 +1,0 @@
----
-- hosts: vagrants
-  remote_user: vagrant
-  tasks:
-      - name: Write date
-        shell: date

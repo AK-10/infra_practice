@@ -1,20 +1,32 @@
----
 - hosts: vagrants
   remote_user: vagrant
-  tasks:
-    - name: add nginx gpg key
-      sudo: true
-      apt_key:
-          url: https://nginx.org/keys/nginx_signing.key
-          state: present
-    - name: add nginx repository
-      apt_repository:
-          repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
-    - name: apt update
-      apt:
-          update_cache: yes
-    - name: install nginx
-      sudo: true
-      apt:
-          name: nginx
 
+  tasks:
+      - name: 'add nginx pgp key'
+        become: yes
+        apt_key:
+            url: https://nginx.org/keys/nginx_signing.key
+            state: present
+
+      - name: 'add nginx repository'
+        become: yes
+        apt_repository:
+            repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
+
+      - name: 'apt update'
+        become: yes
+        apt:
+            update_cache: yes
+
+      - name: 'install nginx'
+        become: yes
+        apt:
+            name: nginx
+            state: latest
+
+      - name: 'enable and start nginx'
+        become: yes
+        systemd:
+            name: nginx
+            enabled: yes
+            state: started

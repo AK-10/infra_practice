@@ -38,6 +38,10 @@ Host web_a
 - playbookを書く(task01/provisioning/setup.yml)
 - `ansible-playbook setup.yml -i ./hosts` (/provisioning にて)
 
+### ハマったところ
+- `become: yes`と書くべきところを`sudo: true`と書いていた. メッセージはsyntax errorだったのでかなりハマった
+
+
 # DNSサーバの構築
 
 # アプリケーションサーバの構築
