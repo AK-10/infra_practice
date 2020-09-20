@@ -36,11 +36,25 @@ Host web_a
 
 ### Ansibleを用いたnginxのインストール
 - playbookを書く(task01/provisioning/setup.yml)
-- `ansible-playbook setup.yml -i ./hosts` (/provisioning にて)
+- hosts, ansible.cfgをいい感じに書く
+- `ansible-playbook setup.yml` (/provisioning にて)
+
 
 ### ハマったところ
 - `become: yes`と書くべきところを`sudo: true`と書いていた. メッセージはsyntax errorだったのでかなりハマった
 
+
+## nginxの設定
+- html, web_a.confを用意
+- /etc/nginx/nginx.confのhttpディレクティブにて
+    - `include /home/vagrant/nginx/web_a.conf;`を追加
+    - `include /etc/nginx/nginx/conf.d/*.conf;`を削除
+- html, nginxディレクトリをcopy(ansible)
+- nginxをrestart(ansible)
+
+### ハマったところ
+- ansible copyアクションがファイルがすでにあると(内容にかかわらず)実行されない
+    - forceつけるべきだった
 
 # DNSサーバの構築
 
