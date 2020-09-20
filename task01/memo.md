@@ -40,7 +40,7 @@ Host web_a
 - `ansible-playbook setup.yml` (/provisioning にて)
 
 
-### ハマったところ
+#### ハマったところ
 - `become: yes`と書くべきところを`sudo: true`と書いていた. メッセージはsyntax errorだったのでかなりハマった
 
 
@@ -52,9 +52,21 @@ Host web_a
 - html, nginxディレクトリをcopy(ansible)
 - nginxをrestart(ansible)
 
-### ハマったところ
+#### ハマったところ
 - ansible copyアクションがファイルがすでにあると(内容にかかわらず)実行されない
     - forceつけるべきだった
+
+## http://www.mynetに対するアクセスを受け入れる
+- host(mac)の/etc/hostsに以下を追加
+    - `192.168.33.10 www.mynet`
+- nginxのserver_nameをwww.mynetに変更
+
+- 二つ目はいらないのではと思っているが，どうなんだろう(実際やらなくても動く)
+    - portを複数開くのであれば必要な気もする(80ではないもので受け入れる)
+    - server_name: http://nginx.org/en/docs/http/request_processing.html
+    - server_nameがrequest headerのHostと一致していない場合，defaultのサーバで処理される. defaultのサーバは最初に定義されたものor明示的にdefaultとしたもの
+    - 今回だと一個しかないので選ばれた(1つしかないのに選ばれたとは)
+        - http://www2.matsue-ct.ac.jp/home/kanayama/text/nginx/node39.html
 
 # DNSサーバの構築
 
