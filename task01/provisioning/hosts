@@ -1,2 +1,5 @@
-[vagrants]
+[web_a]
 192.168.33.10 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa
+
+[dns_a]
+192.168.33.20 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa

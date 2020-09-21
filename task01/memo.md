@@ -33,7 +33,6 @@ Host web_a
 - `$ ansible 192.168.33.10 -m ping -u vagrant`
     - `-u` リモートユーザの指定, 指定しない場合コントロールマシンでログインしているユーザになる
 
-
 ### Ansibleを用いたnginxのインストール
 - playbookを書く(task01/provisioning/setup.yml)
 - hosts, ansible.cfgをいい感じに書く
@@ -69,10 +68,199 @@ Host web_a
         - http://www2.matsue-ct.ac.jp/home/kanayama/text/nginx/node39.html
 
 # DNSサーバの構築
+- ssh config
+```
+Host dns_a
+    HostName 192.168.33.20
+    User vagrant
+    IdentityFile ~/.ssh/infra_practice/task01/id_rsa
+    Port 22
+    StrictHostKeyChecking no
+    PasswordAuthentication no
+    IdentitiesOnly yes
+    LogLevel FATAL
+```
+
+## unboundのインストール
+- provisioning/unbound.ymlを参照
+- unboundについて: https://gihyo.jp/admin/serial/01/ubuntu-recipe/0386
+- ゲスト(dns_a)の`/etc/unbound/unbound.conf`に`include: "/home/vagrant/unbound/unbound.conf"`を追記
+    - これは消して/etc/unbound/unbound.conf.d/web_a.confにシンボリックリンクを貼るように変更
+
+- 確認
+- `@127.0.0.1`は`@localhost`でも可
+    - digは`@*.*.*.*`でネームサーバを指定できる
+```sh
+vagrant@dns-a:~$ dig www.mynet @127.0.0.1
+
+; <<>> DiG 9.11.3-1ubuntu1.11-Ubuntu <<>> www.mynet @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34318
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.mynet.			IN	A
+
+;; ANSWER SECTION:
+www.mynet.		3600	IN	A	192.168.33.10
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Sep 21 20:14:55 UTC 2020
+;; MSG SIZE  rcvd: 54
+```
+
+- www.google.comへの問い合わせ
+
+```sh
+vagrant@dns-a:~$ dig www.google.com @localhost
+
+; <<>> DiG 9.11.3-1ubuntu1.11-Ubuntu <<>> www.google.com @localhost
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 38596
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.google.com.			IN	A
+
+;; ANSWER SECTION:
+www.google.com.		67	IN	A	216.58.196.228
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Sep 21 20:21:39 UTC 2020
+;; MSG SIZE  rcvd: 59
+```
+
+- 正直わからんやった
+    - これみた
+        - https://katoko.hatenablog.com/entry/2018/05/12/121428c
+        - https://hacknote.jp/archives/28932/
+
+## web_aのリゾルバにdns_aを指定してweb_aからwww.mynetが解決できるようにする
+- web_aにて`/etc/systemd/resolved.conf`に以下を追記
+```
+DNS=192.168.33.20
+```
+
+-
+
+- 確認
+
+```
+vagrant@web-a:~$ systemd-resolve --status
+Global
+         DNS Servers: 192.168.33.20
+          DNSSEC NTA: 10.in-addr.arpa
+                      16.172.in-addr.arpa
+                      168.192.in-addr.arpa
+                      17.172.in-addr.arpa
+                      18.172.in-addr.arpa
+                      19.172.in-addr.arpa
+                      20.172.in-addr.arpa
+                      21.172.in-addr.arpa
+                      22.172.in-addr.arpa
+                      23.172.in-addr.arpa
+                      24.172.in-addr.arpa
+                      25.172.in-addr.arpa
+                      26.172.in-addr.arpa
+                      27.172.in-addr.arpa
+                      28.172.in-addr.arpa
+                      29.172.in-addr.arpa
+                      30.172.in-addr.arpa
+                      31.172.in-addr.arpa
+                      corp
+                      d.f.ip6.arpa
+                      home
+                      internal
+```
+
+```
+vagrant@web-a:~$ dig www.mynet
+
+; <<>> DiG 9.11.3-1ubuntu1.11-Ubuntu <<>> www.mynet
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51034
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;www.mynet.			IN	A
+
+;; ANSWER SECTION:
+www.mynet.		0	IN	A	127.0.0.1
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Mon Sep 21 21:33:29 UTC 2020
+;; MSG SIZE  rcvd: 54
+```
+
+```
+vagrant@web-a:~$ dig www.mynet @192.168.33.20
+
+; <<>> DiG 9.11.3-1ubuntu1.11-Ubuntu <<>> www.mynet @192.168.33.20
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 42332
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.mynet.			IN	A
+
+;; ANSWER SECTION:
+www.mynet.		3600	IN	A	192.168.33.10
+
+;; Query time: 0 msec
+;; SERVER: 192.168.33.20#53(192.168.33.20)
+;; WHEN: Mon Sep 21 21:06:07 UTC 2020
+;; MSG SIZE  rcvd: 54
+```
+
+- これでいいのかわからない, いったんこのまま進める
+
+## ローカルマシンのhostsからwww.mynetを削除して，到達できないことを確認する
+- するだけ
+
+## ローカルマシンのリゾルバにdns_aを指定して，www.mynetに到達できることを確認する
+- システム環境設定 > ネットワーク > wifi > 詳細... > DNSから192.168.33.20を追加する
+- ブラウザでhttp://www.mynetに接続する
+- できた
+
+#### ハマったところ
+- apparmorで分割したファイルをincludeできない
+    - /etc/apparmor.d/local/usr.sbin.unboundに以下を追記
+```
+/home/vagrant/unbound/dns_a.conf r,
+```
+    - `sudo systemctl restart apparmor`で解消
+
+- systemd-resolvedとportがバッティングしている
+    - systemd-resolvedの設定を変更する
+        - `/etc/systemd/resolved.conf` に `DNSStubListener=no` を追記
+        - これでパブリックネットワークに繋がらなくなる(apt updateができない)
+        - https://qiita.com/gkzz/items/5ac6648e87339e1dd883 これで解決
+            - シンボリックリンク張り替えのとこだけやれば良さげ(再起動まで)
+
+#### わからない点
+- interface: 0.0.0.0 とは
 
 # アプリケーションサーバの構築
-
+- pending
 # データベースサーバの構築
+- pending
 
 # MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
+- pending
+
 

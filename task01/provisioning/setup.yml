@@ -1,5 +1,5 @@
 ---
-- hosts: vagrants
+- hosts: web_a
   remote_user: vagrant
 
   tasks:
