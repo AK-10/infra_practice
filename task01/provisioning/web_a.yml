@@ -34,13 +34,13 @@
 
       - name: 'scp nginx conf'
         copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_paractice/task01/nginx
-            dest: /home/vagrant/
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx/web_a.conf
+            dest: /home/vagrant/nginx/web_a.conf
             force: yes
 
       - name: 'scp html'
         copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_paractice/task01/html
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/html
             dest: /home/vagrant/
             force: yes
 

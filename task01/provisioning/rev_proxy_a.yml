@@ -1,0 +1,46 @@
+---
+- hosts: rev_proxy_a
+  remote_user: vagrant
+
+  tasks:
+      - name: 'add nginx pgp key'
+        become: yes
+        apt_key:
+            url: https://nginx.org/keys/nginx_signing.key
+            state: present
+
+      - name: 'add nginx repository'
+        become: yes
+        apt_repository:
+            repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
+
+      - name: 'apt update'
+        become: yes
+        apt:
+            update_cache: yes
+
+      - name: 'install nginx'
+        become: yes
+        apt:
+            name: nginx
+            state: latest
+
+      - name: 'enable and start nginx'
+        become: yes
+        systemd:
+            name: nginx
+            enabled: yes
+            state: started
+
+      - name: 'scp nginx conf'
+        copy:
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx/rev_proxy_a.conf
+            dest: /home/vagrant/nginx/
+            force: yes
+
+      - name: 'restart nginx'
+        become: yes
+        systemd:
+            name: nginx
+            state: restarted
+

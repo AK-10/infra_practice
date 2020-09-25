@@ -16,7 +16,7 @@
 
       - name: 'scp unbound'
         copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_paractice/task01/unbound
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/unbound
             dest: /home/vagrant/
             force: yes
 

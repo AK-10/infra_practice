@@ -256,7 +256,87 @@ www.mynet.		3600	IN	A	192.168.33.10
 - interface: 0.0.0.0 とは
 
 # アプリケーションサーバの構築
-- pending
+## web aとの疎通確認
+    - prev_proxy_aで`ping 192.168.33.10`を実行
+    - 特に何もせず疎通している
+
+
+## rev_proxy_aのリゾルバにdns_aを設定，www.mynetが解決できることを確認
+- `/etc/systemd/resolved.conf`に`DNS=192.168.33.20`を追加
+- `$ sudo systemctl restart systemd-resolved` を実行
+- `$ curl http://www.mynet`
+
+```
+vagrant@rev-proxy-a:~$ curl http://www.mynet
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h1>Hello www!</h1>
+</body>
+</html>vagrant@rev-proxy-a:~$
+```
+
+OK
+
+## rev_proxyにansibleでnginxをインストール
+- すでにやっているので割愛
+
+## rev_proxy_aをリバースプロキシとして動くように設定し，http://www.mynetのリクエストを受けた際にweb_aにリクエストをフォーワードするように設定
+- `nginx/rev_proxy_a.conf`を参照
+- server_nameをhttp://www.mynetにする
+- proxy_passでフォワード先をhttp://192.168.33.20:80にする
+- 確認
+    - rev_proxy_aにて`curl localhostを実行`
+```
+vagrant@rev-proxy-a:~$ curl localhost
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h1>Hello www!</h1>
+</body>
+```
+
+## unboundの設定を変更してwww.mynetのipをweb_a -> rev_proxy_aに変更する
+- するだけ
+- macでdnsサーバの設定を忘れていたのでちょっとハマった
+
+確認(コントロールマシンから実行)
+```
+~/W/I/i/t/provisioning ❯❯❯ dig www.mynet @192.168.33.20
+
+; <<>> DiG 9.10.6 <<>> www.mynet @192.168.33.20
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7255
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.mynet.			IN	A
+
+;; ANSWER SECTION:
+www.mynet.		3600	IN	A	192.168.33.30
+
+;; Query time: 0 msec
+;; SERVER: 192.168.33.20#53(192.168.33.20)
+;; WHEN: Fri Sep 25 21:37:42 JST 2020
+;; MSG SIZE  rcvd: 54
+```
+
+## ブラウザからhttp://www.mynetにアクセスして Hello, www!が表示されることを確認
+- web_a, rev_proxy_aの /var/log/nginx/access.logをみて両方にアクセスがきていたらOK
+
 # データベースサーバの構築
 - pending
 

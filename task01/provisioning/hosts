@@ -3,3 +3,6 @@
 
 [dns_a]
 192.168.33.20 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa
+
+[rev_proxy_a]
+192.168.33.30 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa
