@@ -1,6 +1,7 @@
 ---
 - hosts: web_a
   remote_user: vagrant
+  become: yes
 
   tasks:
       - name: 'add nginx pgp key'
@@ -50,3 +51,82 @@
             name: nginx
             state: restarted
 
+      - name: 'install pkg for ruby dependencies'
+        apt:
+            update_cache: yes
+            pkg:
+            - autoconf
+            - bison
+            - build-essential
+            - libssl-dev
+            - libyaml-dev
+            - libreadline6-dev
+            - zlib1g-dev
+            - libncurses5-dev
+            - libffi-dev
+            - libgdbm5
+            - libgdbm-dev
+
+      - name: install rbenv
+        become_user: vagrant
+        shell: git clone https://github.com/rbenv/rbenv.git /home/vagrant/local/rbenv/
+
+      - name: install ruby-build
+        become_user: vagrant
+        shell: git clone https://github.com/rbenv/ruby-build.git /home/vagrant/local/rbenv/plugins/ruby-build
+
+      - name: change onwership
+        file:
+            path: /home/vagrant/local/
+            owner: vagrant
+            group: vagrant
+            state: directory
+            recurse: yes
+
+      - name: 'install ruby-build'
+        shell: /home/vagrant/local/rbenv/plugins/ruby-build/install.sh
+
+      - name: write rbenv path .bashrc
+        blockinfile:
+            dest: /home/vagrant/.bashrc
+            content: |
+                export RBENV_ROOT="$HOME/local/rbenv"
+                export PATH="$HOME/local/rbenv/bin:$PATH"
+                eval "$(rbenv init - --no-rehash)"
+
+      - name: 'source bashrc'
+        shell: '. ~/.bashrc'
+
+      - name: 'install ruby 2.6.5'
+        shell: bash -lc "rbenv install 2.6.5"
+
+      - name: 'rbenv rehash'
+        shell: bash -lc "rbenv rehash"
+
+            #      - name: 'install rbenv'
+            #        git:
+            #            repo: https://github.com/rbenv/rbenv.git
+            #            dest: /home/vagrant/local/rbenv/
+            #
+            #      - name: 'write rbenv path .bashrc'
+            #        blockinfile:
+            #            dest: /home/vagrant/.bashrc
+            #            content: |
+            #                export RBENV_ROOT="$HOME/local/rbenv"
+            #                export PATH="$HOME/local/rbenv/bin:$PATH"
+            #                eval "$(rbenv init - --no-rehash)"
+            #
+            #      - name: 'source bashrc'
+            #        shell: '. ~/.bashrc'
+            #
+            #      - name: 'clone ruby-build'
+            #        git:
+            #            repo: https://github.com/rbenv/ruby-build.git
+            #            dest: /home/vagrant/local/rbenv/plugins/ruby-build/
+            #
+            #      - name: 'install ruby-build'
+            #        shell: /home/vagrant/local/rbenv/plugins/ruby-build/install.sh
+            #
+            
+            #
+            #
