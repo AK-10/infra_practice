@@ -1,59 +1,62 @@
 ---
 - hosts: web_a
   remote_user: vagrant
-  become: yes
+  vars:
+      rbenv_root: /usr/local/rbenv/
 
   tasks:
       - name: 'add nginx pgp key'
-        become: yes
+        become: true
         apt_key:
             url: https://nginx.org/keys/nginx_signing.key
             state: present
 
       - name: 'add nginx repository'
-        become: yes
+        become: true
         apt_repository:
             repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
 
       - name: 'apt update'
-        become: yes
+        become: true
         apt:
-            update_cache: yes
+            update_cache: true
 
       - name: 'install nginx'
-        become: yes
+        become: true
         apt:
             name: nginx
             state: latest
 
-      - name: 'enable and start nginx'
-        become: yes
-        systemd:
-            name: nginx
-            enabled: yes
-            state: started
+            #      - name: 'enable and start nginx'
+            #        become: true
+            #        systemd:
+            #            name: nginx
+            #            enabled: true
+            #            state: started
 
       - name: 'scp nginx conf'
         copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx/web_a.conf
-            dest: /home/vagrant/nginx/web_a.conf
-            force: yes
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx
+            dest: /home/vagrant/
+            force: true
 
       - name: 'scp html'
         copy:
             src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/html
             dest: /home/vagrant/
-            force: yes
+            force: true
 
       - name: 'restart nginx'
-        become: yes
+        become: true
         systemd:
             name: nginx
+            enabled: true
             state: restarted
 
       - name: 'install pkg for ruby dependencies'
+        become: true
         apt:
-            update_cache: yes
+            update_cache: true
             pkg:
             - autoconf
             - bison
@@ -67,66 +70,47 @@
             - libgdbm5
             - libgdbm-dev
 
-      - name: install rbenv
-        become_user: vagrant
-        shell: git clone https://github.com/rbenv/rbenv.git /home/vagrant/local/rbenv/
-
-      - name: install ruby-build
-        become_user: vagrant
-        shell: git clone https://github.com/rbenv/ruby-build.git /home/vagrant/local/rbenv/plugins/ruby-build
-
-      - name: change onwership
-        file:
-            path: /home/vagrant/local/
-            owner: vagrant
-            group: vagrant
-            state: directory
-            recurse: yes
+      - name: 'install rbenv'
+        become: true
+        git:
+            repo: https://github.com/rbenv/rbenv.git
+            dest: "{{ rbenv_root }}"
 
       - name: 'install ruby-build'
-        shell: /home/vagrant/local/rbenv/plugins/ruby-build/install.sh
+        become: true
+        git:
+            repo: https://github.com/rbenv/ruby-build.git
+            dest: "{{ rbenv_root }}plugins/ruby-build/"
 
-      - name: write rbenv path .bashrc
-        blockinfile:
-            dest: /home/vagrant/.bashrc
-            content: |
-                export RBENV_ROOT="$HOME/local/rbenv"
-                export PATH="$HOME/local/rbenv/bin:$PATH"
-                eval "$(rbenv init - --no-rehash)"
+      - name: 'send rbenv.sh to /etc/profile.d'
+        become: true
+        template:
+            src: profile.d/rbenv.sh.j2
+            dest: /etc/profile.d/rbenv.sh
+            owner: root
+            group: vagrant
+            mode: 0755
 
-      - name: 'source bashrc'
-        shell: '. ~/.bashrc'
+
+      - name: 'change group rbenv'
+        become: true
+        file:
+            path: "{{ rbenv_root }}"
+            owner: root
+            group: vagrant
+            recurse: true
+            state: directory
 
       - name: 'install ruby 2.6.5'
-        shell: bash -lc "rbenv install 2.6.5"
+        become: true
+        shell: bash -lc "rbenv install --skip-existing 2.6.5"
 
-      - name: 'rbenv rehash'
-        shell: bash -lc "rbenv rehash"
+      - name: 'set ruby version 2.6.5'
+        become: true
+        shell: bash -lc "rbenv global 2.6.5"
 
-            #      - name: 'install rbenv'
-            #        git:
-            #            repo: https://github.com/rbenv/rbenv.git
-            #            dest: /home/vagrant/local/rbenv/
-            #
-            #      - name: 'write rbenv path .bashrc'
-            #        blockinfile:
-            #            dest: /home/vagrant/.bashrc
-            #            content: |
-            #                export RBENV_ROOT="$HOME/local/rbenv"
-            #                export PATH="$HOME/local/rbenv/bin:$PATH"
-            #                eval "$(rbenv init - --no-rehash)"
-            #
-            #      - name: 'source bashrc'
-            #        shell: '. ~/.bashrc'
-            #
-            #      - name: 'clone ruby-build'
-            #        git:
-            #            repo: https://github.com/rbenv/ruby-build.git
-            #            dest: /home/vagrant/local/rbenv/plugins/ruby-build/
-            #
-            #      - name: 'install ruby-build'
-            #        shell: /home/vagrant/local/rbenv/plugins/ruby-build/install.sh
-            #
-            
-            #
-            #
+      - name: 'install node v13.11.0'
+        shell: echo "skip install node"
+
+      - name: 'install node yarn'
+        shell: echo "skip install node"
