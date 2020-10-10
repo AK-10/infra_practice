@@ -50,7 +50,7 @@
         become: true
         apt:
             update_cache: true
-            pkg:
+            name:
             - autoconf
             - bison
             - build-essential
@@ -99,8 +99,27 @@
       - name: 'set ruby version 2.6.5'
         shell: bash -lc "rbenv global 2.6.5"
 
-      - name: 'install node v13.11.0'
-        shell: echo "skip install node"
+      - name: 'install old node'
+        become: true
+        apt:
+            pkg:
+            - nodejs
+            - npm
+
+      - name: 'install n'
+        become: true
+        shell: npm install -g n
+
+      - name: 'install node 13.11.0'
+        become: true
+        shell: n install 13.11.0
+
+      - name: 'purge old node'
+        apt:
+            name:
+            - nodejs
+            - npm
+            purge: true
 
       - name: 'install node yarn'
         shell: echo "skip install node"

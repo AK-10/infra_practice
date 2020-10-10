@@ -381,7 +381,11 @@ www.mynet.		3600	IN	A	192.168.33.30
 
 ### node v13.11.0
 - [NodeSource](https://github.com/nodesource/distributions/blob/master/README.md)からインストールしてみる
+- どうもメジャーバージョンしか指定できなさそうなので諦める
 
+- `n` コマンドを使う
+- sudo apt install nodejs npm
+- 
 
 # データベースサーバの構築
 - pending
