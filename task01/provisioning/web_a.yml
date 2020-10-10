@@ -27,13 +27,6 @@
             name: nginx
             state: latest
 
-            #      - name: 'enable and start nginx'
-            #        become: true
-            #        systemd:
-            #            name: nginx
-            #            enabled: true
-            #            state: started
-
       - name: 'scp nginx conf'
         copy:
             src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx
@@ -87,26 +80,23 @@
         template:
             src: profile.d/rbenv.sh.j2
             dest: /etc/profile.d/rbenv.sh
-            owner: root
+            owner: vagrant
             group: vagrant
             mode: 0755
-
 
       - name: 'change group rbenv'
         become: true
         file:
             path: "{{ rbenv_root }}"
-            owner: root
+            owner: vagrant
             group: vagrant
             recurse: true
             state: directory
 
       - name: 'install ruby 2.6.5'
-        become: true
         shell: bash -lc "rbenv install --skip-existing 2.6.5"
 
       - name: 'set ruby version 2.6.5'
-        become: true
         shell: bash -lc "rbenv global 2.6.5"
 
       - name: 'install node v13.11.0'

@@ -337,10 +337,55 @@ www.mynet.		3600	IN	A	192.168.33.30
 ## ブラウザからhttp://www.mynetにアクセスして Hello, www!が表示されることを確認
 - web_a, rev_proxy_aの /var/log/nginx/access.logをみて両方にアクセスがきていたらOK
 
+# アプリケーションサーバ(Rails)の構築
+## rbenv, ruby-build, rubyのビルドの依存をインストール
+### rbenv のインストール
+- 手元にインストールするノリで入れるとうまく行かなかった
+
+#### 失敗
+- `.bash_profile`にpathを記述指定
+
+```yml
+    - name: 'install ruby 2.6.5'
+      become: true
+      shell: bash -lc "source /home/vagrant/.bash_profile"
+```
+
+これだとrbenvを呼べなかった.よくわからない.
+
+#### 成功
+- `/etc/profile.d/rbenv.sh` でPATHを追加するようにする
+    - `/etc/profile.d/` 配下のファイルはbash起動時に`/etc/profile`によって実行されるため
+    - `~/.bash_profile` も実行されるはずなんだけど，なぜか実行されなかった
+        - 多分実行ユーザとかの関係でそもそも `~/.bash_profile` が実行されないと予想
+
+```yml
+      - name: 'send rbenv.sh to /etc/profile.d'
+        become: true
+        template:
+            src: profile.d/rbenv.sh.j2
+            dest: /etc/profile.d/rbenv.sh
+            owner: vagrant
+            group: vagrant
+            mode: 0755
+
+      - name: 'change group rbenv'
+        become: true
+        file:
+            path: "{{ rbenv_root }}"
+            owner: vagrant
+            group: vagrant
+            recurse: true
+            state: directory
+```
+
+### node v13.11.0
+- [NodeSource](https://github.com/nodesource/distributions/blob/master/README.md)からインストールしてみる
+
+
 # データベースサーバの構築
 - pending
 
 # MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
 - pending
-
 
