@@ -3,6 +3,8 @@
   remote_user: vagrant
   vars:
       rbenv_root: /usr/local/rbenv/
+      app_root: /home/vagrant/infra-web-a
+      bundle_path: /usr/local/rbenv/shims/bundle
 
   tasks:
       - name: 'add nginx pgp key'
@@ -108,7 +110,9 @@
 
       - name: 'install n'
         become: true
-        shell: npm install -g n
+        community.general.npm:
+            name: n
+            global: true
 
       - name: 'install node 13.11.0'
         become: true
@@ -122,4 +126,34 @@
             purge: true
 
       - name: 'install node yarn'
-        shell: echo "skip install node"
+        become: true
+        community.general.npm:
+            name: yarn
+            global: true
+            version: 1.22.4
+
+      - name: 'install bundler'
+        shell: bash -lc "gem install bundler -v 2.1.4"
+
+      - name: 'clone rails application'
+        become_user: vagrant
+        git:
+            repo: https://github.com/AK-10/infra-web-a
+            dest: "{{ app_root }}"
+
+      - name: bundle install
+        community.general.bundler:
+            state: present
+            chdir: "{{ app_root }}"
+            executable: "{{ bundle_path }}"
+
+      - name: yarn install --check-files
+        shell:
+            cmd: bash -lc "yarn install --check-files"
+            chdir: "{{ app_root }}"
+
+      - name: rails webpacker:install
+        shell:
+            cmd: bash -lc "bundle exec rails webpacker:install"
+            chdir: "{{ app_root }}"
+

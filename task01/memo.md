@@ -379,13 +379,75 @@ www.mynet.		3600	IN	A	192.168.33.30
             state: directory
 ```
 
-### node v13.11.0
+## node v13.11.0
 - [NodeSource](https://github.com/nodesource/distributions/blob/master/README.md)からインストールしてみる
-- どうもメジャーバージョンしか指定できなさそうなので諦める
+- どうもメジャーバージョンしか指定できなさそうなので諦める🥱
 
 - `n` コマンドを使う
-- sudo apt install nodejs npm
-- 
+```yml
+      # テキトーなnodejs, npmを入れる(8.10.0)
+      - name: 'install old node'
+        become: true
+        apt:
+            pkg:
+            - nodejs
+            - npm
+
+      # コマンドのインストール(全体で使うのでglobalオプションを使う)
+      - name: 'install n'
+        become: true
+        shell: npm install -g n
+
+      # nでnode 13.11.0を入れる
+      - name: 'install node 13.11.0'
+        become: true
+        shell: n install 13.11.0
+
+      # テキトーに入れた方のnodejs, npmを削除
+      - name: 'purge old node'
+        apt:
+            name:
+            - nodejs
+            - npm
+            purge: true
+```
+
+## yarn 1.22.4のインストール
+
+- ansibleのnpm pluginを使えるようにする
+    - `ansible-galaxy collection install community.general` (コントロールマシンで)
+    - リモートマシンのnpmのパスが/usr/local/binでないと動かない可能性がある
+- npmで入れる
+    ```yml
+    name: 'install yarn 1.22.4'
+    become: true
+    community.general.npm:
+        name: yarn
+        global: true
+        version: 1.22.4
+    ```
+
+## TODO: ansibleの警告を消す
+```
+[WARNING]: sftp transfer mechanism failed on [192.168.33.10]. Use ANSIBLE_DEBUG=1 to see detailed information
+[WARNING]: scp transfer mechanism failed on [192.168.33.10]. Use ANSIBLE_DEBUG=1 to see detailed information
+```
+ずっとこんなのが出てる
+
+## railsアプリケーションの作成
+### 方針
+- ansibleでbundlerをインストールする
+- railsアプリケーションは手元で作ってgithubに置いておく
+- gitモジュールでとってくる
+- ansibleから構築
+- ansibleから起動
+
+
+### rails new
+- dbなしにする
+  - `bundle exec new . -O` をするとactive_recordを利用しなくなる
+  - dbの接続設定もいらなくなる
+
 
 # データベースサーバの構築
 - pending
