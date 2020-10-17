@@ -449,6 +449,18 @@ www.mynet.		3600	IN	A	192.168.33.30
   - dbの接続設定もいらなくなる
 
 
+## web_aからcurlでhttp://localhost:3000っでレスポンスを確認
+- やるだけ
+
+## unboundに`nodb-app.mynet` => web_aとなるIPアドレスを解決する設定を追加し，ブラウザから確認
+- unbound/dns_a.confに `local-data: "nodb-app.mynet. IN A 192.168.33.10"` を追加
+- sshでweb_aに入り, `bundle exec rails s -b 192.168.33.10` を実行
+    - FQDNを設定しないとlocalhostからのアクセスしか受け付けず，ホストマシンからのリクエストを受け付けなくなる
+    - また, railsのconfig/environments/development.rbとかに`config.hosts << "nodb-app.mynet"`を追加
+
+- もしくは`bundle exec rails s -b nodb-app.mynet`でも行けるかも
+    - これだとrails側の設定は特にいらなそう
+
 # データベースサーバの構築
 - pending
 
