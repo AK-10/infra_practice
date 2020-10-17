@@ -461,6 +461,27 @@ www.mynet.		3600	IN	A	192.168.33.30
 - もしくは`bundle exec rails s -b nodb-app.mynet`でも行けるかも
     - これだとrails側の設定は特にいらなそう
 
+
+## web_aのnginxにnodb-app.mynetの80番ポートへのリクエストを3000番ポートにフォワードする設定を追加し，ブラウザからhttp://nodb-app.mynetにアクセスして`Yay! You're on Rails`が表示されることを確認
+- nginxに以下を追加
+
+```web_a.conf
+server {
+    listen 80;
+    server_name nodb-app.mynet;
+    location / {
+        proxy_pass http://localhost:3000;
+    }
+}
+```
+
+- serverディレクティブを二つに分けないと，元のwww.mynetが機能しなくなる(多分)
+
+- 確認
+    - 一つ前でrailsを`bundle exec rails s -b 192.168.33.10`にしていたが，今回は特にFQDNは指定しない
+        - localhostに対してproxyをするようにしているため
+        - `proxy_pass http://192.168.33.10:3000`だったらつける必要がある（多分）
+
 # データベースサーバの構築
 - pending
 
