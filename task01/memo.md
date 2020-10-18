@@ -483,7 +483,24 @@ server {
         - `proxy_pass http://192.168.33.10:3000`だったらつける必要がある（多分）
 
 # データベースサーバの構築
-- pending
+## ansibleを使いdb_aにmysql5.7をインストール
+- aptでいれる
+
+## rootにパスワードを設定する
+- mysql_secure_installationを使う
+    - いろいろいじって--skip-grant-tablesをつけていたのでうまく行かなかった
+    - 消す
+
+## mysqlコマンドでrootログイン, webappユーザを追加
+### 制約
+- パスワードを設定
+- 全てのデータベース, テーブルへのアクセスを許可
+- SELECT INSERT UPDATE DELETEのみ実行可能
+- localhost / 同一サブネットからのアクセスのみ許可
+
+
+
+## tcp接続を許可し，web_aからmysqlコマンドでdb_aにwebappでアクセスできることを確認
 
 # MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
 - pending

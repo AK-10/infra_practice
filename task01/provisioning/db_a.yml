@@ -1,0 +1,35 @@
+---
+- hosts: db_a
+  remote_user: vagrant
+
+  tasks:
+      - name: 'apt update'
+        become: yes
+        apt:
+            update_cache: yes
+
+      - name: 'install mysql5.7'
+        become: yes
+        apt:
+            name: mysql-server
+            state: latest
+
+            #      - name: 'scp unbound'
+            #        copy:
+            #            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/unbound
+            #            dest: /home/vagrant/
+            #            force: yes
+            #
+            #      - name: 'create symlink unbound.conf'
+            #        become: yes
+            #        file:
+            #            src: /home/vagrant/unbound/dns_a.conf
+            #            dest: /etc/unbound/unbound.conf.d/dns_a.conf
+            #            state: link
+            #
+            #      - name: 'restart unbound'
+            #        become: yes
+            #        systemd:
+            #            name: unbound
+            #            state: restarted
+
