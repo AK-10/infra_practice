@@ -489,18 +489,112 @@ server {
 ## rootにパスワードを設定する
 - mysql_secure_installationを使う
     - いろいろいじって--skip-grant-tablesをつけていたのでうまく行かなかった
-    - 消す
 
 ## mysqlコマンドでrootログイン, webappユーザを追加
-### 制約
-- パスワードを設定
-- 全てのデータベース, テーブルへのアクセスを許可
-- SELECT INSERT UPDATE DELETEのみ実行可能
-- localhost / 同一サブネットからのアクセスのみ許可
+
+- webappユーザの制約
+    - パスワードを設定
+    - 全てのデータベース, テーブルへのアクセスを許可
+    - SELECT INSERT UPDATE DELETEのみ実行可能
+    - localhost / 同一サブネットからのアクセスのみ許可
 
 
+### ユーザー作成とパスワードの設定
+```sql
+CREATE USER 'webapp'@'localhost' IDENTIFIED BY '***';
+```
+
+## localhost / 同一サブネットからのアクセスのみ許可
+ユーザ作成時点ではlocalhostからのアクセスしか許可しないのでwebappユーザをもう一つ追加
+サブネットは`192.168.33.*`
+```sql
+CREATE USER 'webapp'@'192.168.33.%' IDENTIFIED BY '***';
+```
+
+#### 変更前
+```mysql
+mysql> select user, host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| debian-sys-maint | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
+| webapp           | localhost |
++------------------+-----------+
+```
+
+#### 変更後
+```mysql
+mysql> select user, host from mysql.user;
++------------------+--------------+
+| user             | host         |
++------------------+--------------+
+| webapp           | 192.168.33.% |
+| debian-sys-maint | localhost    |
+| mysql.session    | localhost    |
+| mysql.sys        | localhost    |
+| root             | localhost    |
+| webapp           | localhost    |
++------------------+--------------+
+```
+
+#### 全てのデータベース, テーブルへのアクセスを許可, SELECT INSERT UPDATE DELETEのみ実行可能
+```mysql
+mysql> GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'localhost';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'192.168.33.%';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SHOw GRANTS FOR 'webapp'@'localhost';
++---------------------------------------------------------------------+
+| Grants for webapp@localhost                                         |
++---------------------------------------------------------------------+
+| GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'localhost' |
++---------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> SHOw GRANTS FOR 'webapp'@'192.168.33.%';
++------------------------------------------------------------------------+
+| Grants for webapp@192.168.33.%                                         |
++------------------------------------------------------------------------+
+| GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'192.168.33.%' |
++------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+```
 
 ## tcp接続を許可し，web_aからmysqlコマンドでdb_aにwebappでアクセスできることを確認
+### tcp接続(リモートアクセス)を許可
+`/etc/mysql/mysql.conf.d/mysqld.cnf`の`bind-address=127.0.0.1`を`0.0.0.0`に変更
+
+mycnfをansibleで配布してもよかったかも．
+
+### 確認(web_aに事前にmysql-clientを入れること)
+```shell
+vagrant@web-a:~$ mysql -u webapp -h 192.168.33.40 --protocol=TCP -p
+Enter password:
+ERROR 2003 (HY000): Can't connect to MySQL server on '192.168.33.40' (111)
+vagrant@web-a:~$ mysql -u webapp -h 192.168.33.40  -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.31-0ubuntu0.18.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> ^DBye
+```
+
+## 参考
+- https://dev.mysql.com/doc/refman/5.7/en/connection-access.html
 
 # MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
 - pending

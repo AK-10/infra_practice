@@ -157,3 +157,9 @@
             cmd: bash -lc "bundle exec rails webpacker:install"
             chdir: "{{ app_root }}"
 
+      - name: 'install mysql-client'
+        become: true
+        apt:
+            name: mysql-client
+            state: latest
+
