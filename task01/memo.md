@@ -688,5 +688,50 @@ E, [2020-10-31T09:56:27.039311 #14456] ERROR -- : app error: Missing `secret_key
 secret_key_baseがないので追加する.
 実際にはcredentials.yml.encはあるのでmaster.keyを設置すれば良い
 
-コントロールマシンから送信する
+今回はコントロールマシンから送信するようにした
 
+### Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (2))
+デプロイして192.168.33.10:3001にアクセスすると
+`Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (2))` のエラーが出た
+
+確認できなかったが,RAILS_ENVを正しく設定できていないのでdbをlocalhostに繋ぎに行こうとしてsockを見に行った結果エラーになっている
+`/etc/profile.d/env.sh` で`export RAILS_ENV=production`をしていたが，どうもうまくいっていなかったっぽい
+
+- 対処
+ - webappのunitfileにEnvironmentFileの指定を追加する
+webapp.service
+```
+[Unit]
+Description=webapp - rails application via unicorn
+Before=nginx.service
+
+[Service]
+PIDFile=/home/vagrant/infra-web-a/tmp/pids/unicorn.pid
+WorkingDirectory=/home/vagrant/infra-web-a
+SyslogIdentifier=webapp-unicorn
+EnvironmentFile=/home/vagrant/env/production.env <- 追加
+ExecStart=/usr/local/rbenv/shims/bundle exec unicorn_rails -D -c config/unicorn.rb -E production
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+```
+
+~/env/production.env
+```
+RAILS_ENV='production'
+DB_HOST='192.168.33.40'
+DB_USER='webapp'
+DB_PASSWORD='*******'
+```
+
+でうまく動いた(が，`bundle exec rails c` とかが動かなくなるので`RAILS_ENV=production bundle exec rails c`でしないといけなくなる. 多分．)
+
+todo: update, deleteができない. 多分rails-ujsが読み込めていない
+
+## nginx経由でアクセスする(rev_proxy_a 以外のアクセスを拒否する)
+- web_aのwww.mynetに対してallow, denyを設定する
+    - 192.168.33.30(rev_proxy_a)をallow. それ以外はdenyにする.
+
+- www.mynet/todosで表示されて, 192.168.33.10/todosで表示されなければ(403なら)OK
