@@ -11,4 +11,4 @@
 192.168.33.40 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa
 
 [playground]
-192.168.33.50 ansible_ssh_private_key_file=~/WorkSpace/Infra/infra_practice/task01/.vagrant/machines/playground/virtualbox/private_key
+192.168.33.50 ansible_ssh_private_key_file=~/.ssh/infra_practice/task01/id_rsa

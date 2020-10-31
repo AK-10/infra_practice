@@ -166,18 +166,20 @@
             cmd: bash -lc "bundle exec rails webpacker:install"
             chdir: "{{ app_root }}"
 
+      - name: 'make sure env dir'
+        file:
+            path: /home/vagrant/env
+            state: directory
+            recurse: true
 
-      - name: 'send env.sh to /etc/profile.d'
+      - name: 'send envfile'
         become: true
         template:
-            src: profile.d/env.sh.j2
-            dest: /etc/profile.d/env.sh
+            src: env/production.env.j2
+            dest: /home/vagrant/env/production.env
             owner: vagrant
             group: vagrant
-            mode: 0755
-
-      - name: 'echo RAILS_ENV'
-        shell: bash -lc "env | grep RAILS"
+            mode: 0440
 
       # envでRAILS_ENV=productionになっているはず
       # TODO: 一回しかしたくない（shellは冪等性が保証されない?）
@@ -195,11 +197,20 @@
       - name: 'send webapp.service'
         become: true
         template:
-            src: system/webapp.service.j2
+            src: systemd/webapp.service.j2
             dest: /etc/systemd/system/webapp.service
             owner: vagrant
             group: vagrant
             mode: 0755
+
+      - name: 'scp rails master.key'
+        copy:
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/provisioning/secrets/master.key
+            dest: "{{ app_root }}/config/"
+            force: true
+            owner: vagrant
+            group: vagrant
+            mode: 0440
 
       - name: 'start webapp'
         become: true
@@ -207,3 +218,4 @@
             name: webapp
             enabled: true
             state: started
+

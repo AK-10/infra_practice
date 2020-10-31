@@ -6,7 +6,8 @@ Before=nginx.service
 PIDFile=/home/vagrant/infra-web-a/tmp/pids/unicorn.pid
 WorkingDirectory=/home/vagrant/infra-web-a
 SyslogIdentifier=webapp-unicorn
-ExecStart=bundle exec unicorn_rails -D -c config/unicorn.rb -E production
+EnvironmentFile=/home/vagrant/env/production.env
+ExecStart=/usr/local/rbenv/shims/bundle exec unicorn_rails -D -c config/unicorn.rb -E production
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s QUIT $MAINPID
 

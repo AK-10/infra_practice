@@ -7,46 +7,46 @@
       bundle_path: /usr/local/rbenv/shims/bundle
 
   tasks:
-      - name: 'add nginx pgp key'
-        become: true
-        apt_key:
-            url: https://nginx.org/keys/nginx_signing.key
-            state: present
-
-      - name: 'add nginx repository'
-        become: true
-        apt_repository:
-            repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
-
+      #       - name: 'add nginx pgp key'
+      #         become: true
+      #         apt_key:
+      #             url: https://nginx.org/keys/nginx_signing.key
+      #             state: present
+      #
+      #       - name: 'add nginx repository'
+      #         become: true
+      #         apt_repository:
+      #             repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
+      #
       - name: 'apt update'
         become: true
         apt:
             update_cache: true
 
-      - name: 'install nginx'
-        become: true
-        apt:
-            name: nginx
-            state: latest
-
-      - name: 'scp nginx conf'
-        copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx
-            dest: /home/vagrant/
-            force: true
-
-      - name: 'scp html'
-        copy:
-            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/html
-            dest: /home/vagrant/
-            force: true
-
-      - name: 'restart nginx'
-        become: true
-        systemd:
-            name: nginx
-            enabled: true
-            state: restarted
+            #      - name: 'install nginx'
+            #        become: true
+            #        apt:
+            #            name: nginx
+            #            state: latest
+            #
+            #      - name: 'scp nginx conf'
+            #        copy:
+            #            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx
+            #            dest: /home/vagrant/
+            #            force: true
+            #
+            #      - name: 'scp html'
+            #        copy:
+            #            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/html
+            #            dest: /home/vagrant/
+            #            force: true
+            #
+            #      - name: 'restart nginx'
+            #        become: true
+            #        systemd:
+            #            name: nginx
+            #            enabled: true
+            #            state: restarted
 
       - name: 'install pkg for ruby dependencies'
         become: true

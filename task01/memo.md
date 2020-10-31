@@ -604,6 +604,7 @@ mysql> ^DBye
 - リクエストはrev_proxyからのみ許可
 
 段階を踏む
+- web_aにアプリケーションサーバを構築
 - web_aへのリクエスト(192.168.33.10:3001)で正しく動いていることを確認する
     - dbへの書き込み，読み込み
 - proxy_aからのリクエストのみ許可する
@@ -626,13 +627,66 @@ mysql> ^DBye
     - これはどうやればいいのかわからんので, systemdで起動するようにした
 
 ## unicornの設定
+config/unicorn.rbを参照
 
 ## nginxの設定
 nginx -> unicornでhttp header等もproxyする
 
 web_a.conf
 ```nginx
+server {
+    listen 80;
+    server_name www.mynet;
 
+    location / {
+        # root /home/vagrant/html;
+        # index index.html;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_pass http://localhost:3001;
+    }
+
+    # error_page   500 502 503 504  /50x.html;
+    # location = /50x.html {
+    #     root   /usr/share/nginx/html;
+    # }
+}
+
+server {
+    listen 80;
+    server_name nodb-app.mynet;
+    location / {
+        proxy_pass http://localhost:3001;
+    }
+}
 
 ```
+
+## db作成
+- `bundle exec rails db:create`で作成
+- webappにCREATEがなかったのでつける,もしくは手で作る. (後で確認)
+    - 多分マイグレーションとかができないのでCREATEも作ったほうが良さげ
+    - もしくはマイグレーション用のユーザを作る
+
+db_aでrootユーザでmysqlにログイン
+```mysql
+mysql> GRANT CREATE, SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'192.168.33.%';
+mysql> GRANT CREATE, SELECT, INSERT, UPDATE, DELETE ON *.* TO 'webapp'@'localhost';
+mysql> FLUSH PRIVILEGES;
+```
+## デプロイ
+- web_aに対してansible-playbookを実行する
+- 以下のエラーが発生
+
+```infra-web-a/log/unicorn-stderr.log
+E, [2020-10-31T09:56:25.413783 #14455] ERROR -- : /usr/local/rbenv/versions/2.6.5/bin/bundle:23:in `load'
+E, [2020-10-31T09:56:25.413871 #14455] ERROR -- : /usr/local/rbenv/versions/2.6.5/bin/bundle:23:in `<main>'
+E, [2020-10-31T09:56:27.039311 #14456] ERROR -- : app error: Missing `secret_key_base` for 'production' environment, set this string with `rails credentials:edit` (ArgumentError)
+```
+
+secret_key_baseがないので追加する.
+実際にはcredentials.yml.encはあるのでmaster.keyを設置すれば良い
+
+コントロールマシンから送信する
 
