@@ -1,0 +1,14 @@
+[Unit]
+Description=webapp - rails application via unicorn
+Before=nginx.service
+
+[Service]
+PIDFile=/home/vagrant/infra-web-a/tmp/pids/unicorn.pid
+WorkingDirectory=/home/vagrant/infra-web-a
+SyslogIdentifier=webapp-unicorn
+ExecStart=bundle exec unicorn_rails -D -c config/unicorn.rb -E production
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+
+[Install]
+WantedBy=multi-user.target

@@ -597,5 +597,42 @@ mysql> ^DBye
 - https://dev.mysql.com/doc/refman/5.7/en/connection-access.html
 
 # MySQLを使い，リバースプロキシでリクエストをうけるrailsアプリケーションサーバの構築
-- pending
+## やるべきこと
+- 自己証明書の発行
+- web_aにアプリケーションサーバを構築(productionモード)
+- assetsはnginxから配信
+- リクエストはrev_proxyからのみ許可
+
+段階を踏む
+- web_aへのリクエスト(192.168.33.10:3001)で正しく動いていることを確認する
+    - dbへの書き込み，読み込み
+- proxy_aからのリクエストのみ許可する
+- proxy_aへのリクエストで正しく動いていることを確認する
+- web_aへの直接リクエストで弾かれることを確認する
+- ssl証明書を発行する
+- httpsでアクセスできることを確認する
+
+
+### やりたいこと
+- [client] -- req --> [dns_a] -- (resolve) --> [proxy_a(nginx)] -- (rev proxy) --> [web_a(nginx 192.168.33.10:80)] --> [web_a(unicorn, http://localhost:3000)] --> [web_a(rails process)] --> [db_a(mysql)]
+
+となるように設定すれば良い.
+いろいろみていると[web_a(nginx)] --> [web_a(unicorn)]はunixsocketでもできるっぽいが，今回はしない
+
+### やること
+- unicornの導入
+- nginxの設定変更
+- productionで動かすためのwebapp.serviceの作成
+    - これはどうやればいいのかわからんので, systemdで起動するようにした
+
+## unicornの設定
+
+## nginxの設定
+nginx -> unicornでhttp header等もproxyする
+
+web_a.conf
+```nginx
+
+
+```
 

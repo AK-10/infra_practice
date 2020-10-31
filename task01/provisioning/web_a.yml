@@ -163,3 +163,40 @@
             name: mysql-client
             state: latest
 
+      - name: 'send env.sh to /etc/profile.d'
+        become: true
+        template:
+            src: profile.d/env.sh.j2
+            dest: /etc/profile.d/env.sh
+            owner: vagrant
+            group: vagrant
+            mode: 0755
+
+      # envでRAILS_ENV=productionになっているはず
+      # TODO: 一回しかしたくない（shellは冪等性が保証されない?）
+      # db:createはすでにある場合は何もしないので実は問題ない説ある
+      - name: rails db:create
+        shell:
+            cmd: bash -lc "bundle exec rails db:create"
+            chdir: "{{ app_root }}"
+
+      - name: rails db:migrate
+        shell:
+            cmd: bash -lc "bundle exec rails db:migrate"
+            chdir: "{{ app_root }}"
+
+      - name: 'send webapp.service'
+        become: true
+        template:
+            src: system/webapp.service.j2
+            dest: /etc/systemd/system/webapp.service
+            owner: vagrant
+            group: vagrant
+            mode: 0755
+
+      - name: 'start webapp'
+        become: true
+        systemd:
+            name: webapp
+            enabled: true
+            state: started
