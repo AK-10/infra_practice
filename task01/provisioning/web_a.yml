@@ -6,6 +6,9 @@
       app_root: /home/vagrant/infra-web-a
       bundle_path: /usr/local/rbenv/shims/bundle
 
+  environment:
+      RAILS_ENV: production
+
   tasks:
       - name: 'add nginx pgp key'
         become: true
@@ -164,6 +167,11 @@
       - name: rails webpacker:install
         shell:
             cmd: bash -lc "bundle exec rails webpacker:install"
+            chdir: "{{ app_root }}"
+
+      - name: assets precompile
+        shell:
+            cmd: bash -lc "bundle exec rails assets:precompile"
             chdir: "{{ app_root }}"
 
       - name: 'make sure env dir'

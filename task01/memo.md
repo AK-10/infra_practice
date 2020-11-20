@@ -735,3 +735,15 @@ todo: update, deleteができない. 多分rails-ujsが読み込めていない
     - 192.168.33.30(rev_proxy_a)をallow. それ以外はdenyにする.
 
 - www.mynet/todosで表示されて, 192.168.33.10/todosで表示されなければ(403なら)OK
+
+
+## assetsファイルはrailsではなくnginxから返すようにする
+js, css, png, jpg, みたいなのをnginxで返すように設定する
+web_a.confに以下を追加
+
+```
+    location ~ ^/assets/ {
+        root /home/vagrant/infra-web-a/public;
+    }
+
+```
