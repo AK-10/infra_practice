@@ -4,42 +4,53 @@
 
   tasks:
       - name: 'add nginx pgp key'
-        become: yes
+        become: true
         apt_key:
             url: https://nginx.org/keys/nginx_signing.key
             state: present
 
       - name: 'add nginx repository'
-        become: yes
+        become: true
         apt_repository:
             repo: deb http://nginx.org/packages/ubuntu/ bionic nginx
 
       - name: 'apt update'
-        become: yes
+        become: true
         apt:
-            update_cache: yes
+            update_cache: true
 
       - name: 'install nginx'
-        become: yes
+        become: true
         apt:
             name: nginx
             state: latest
 
       - name: 'enable and start nginx'
-        become: yes
+        become: true
         systemd:
             name: nginx
-            enabled: yes
+            enabled: true
             state: started
 
       - name: 'scp nginx conf'
         copy:
             src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/nginx/rev_proxy_a.conf
             dest: /home/vagrant/nginx/
-            force: yes
+            force: true
+
+      - name: 'scp ssl keys'
+        become: true
+        copy:
+            src: /Users/atsushikonishi/WorkSpace/Infra/infra_practice/task01/keys
+            dest: /home/vagrant/
+            directory_mode: true
+            mode: 644
+            owner: vagrant
+            group: vagrant
+            force: true
 
       - name: 'restart nginx'
-        become: yes
+        become: true
         systemd:
             name: nginx
             state: restarted

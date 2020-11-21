@@ -89,6 +89,16 @@
             group: vagrant
             mode: 0755
 
+      - name: 'send env.sh to /etc/profile.d'
+        become: true
+        template:
+            src: profile.d/env.sh.j2
+            dest: /etc/profile.d/env.sh
+            owner: vagrant
+            group: vagrant
+            mode: 0755
+
+
       - name: 'change group rbenv'
         become: true
         file:

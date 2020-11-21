@@ -747,3 +747,87 @@ web_a.confに以下を追加
     }
 
 ```
+
+## opensslで自己証明書を作成し，rev_proxy_aのnginxに設定する
+### 方針
+コントロールマシンで鍵を作成してrev_proxy_aに配布する
+
+
+- 秘密鍵作成
+```bash
+$ openssl genrsa 2024 > server.key
+```
+
+- 証明書署名要求(CSR / Certificate Signing Request)の作成
+入力は適当で
+```bash
+~/W/I/i/t/keys ❯❯❯ openssl req -new -key server.key > server.csr                                                            master ✱
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:JP
+State or Province Name (full name) [Some-State]:Fukuoka
+Locality Name (eg, city) []:Hakata-ku
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:www.mynet
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+```
+
+- サーバ証明書の作成
+```bash
+~/W/I/i/t/keys ❯❯❯ openssl x509 -req -days 3650 -signkey server.key < server.csr > srever.crt
+Signature ok
+subject=C = JP, ST = Fukuoka, L = Hakata-ku, O = Internet Widgits Pty Ltd, CN = www.mynet
+Getting Private key
+```
+
+- 証明書(server.csr)と中間証明書(server.crt)を結合
+```bash
+~/W/I/i/t/keys ❯❯❯ cat server.crt server.csr > server.pem
+```
+
+- nginxに設定
+serverディレクティブに以下を追加
+```nginx/rev_proxy_a.conf
+    listen 443 ssl;
+
+
+    ssl on;
+    ssl_certificate /home/vagrant/keys/server.pem;
+    ssl_certificate_key /home/vagrant/keys/server.key;
+}
+```
+
+- InvalidAuthneticityTokenErrorが出るので,以下でhttpスキームとホストを正しいものに設定する
+    - $schemeと$hostではダメだったので(それぞれhttps, www.mynetが入りそうな気がしているけれど)直接書いた
+    - あんまりよくない気がする
+
+```nginx/web_a.conf
+localton / {
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header Host www.mynet;
+}
+```
+
+https://www.mynetで確認(GET, POST含め)
+
+# appendix
+
+## 今回の構成図
+
+
+## DNSについて
+
+## sslについて
+
+

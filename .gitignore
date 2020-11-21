@@ -1,4 +1,4 @@
 */**/.vagrant
 task01/provisioning/templates/env/production.env.j2
 */**/secrets
-
+*/**/keys
