@@ -174,14 +174,20 @@
             cmd: bash -lc "yarn install --check-files"
             chdir: "{{ app_root }}"
 
+      - name: check installing webpacker
+        stat:
+            path: "{{ app_root }}/config/webpacker.yml"
+        register: installed_webpacker
+
       - name: rails webpacker:install
         shell:
             cmd: bash -lc "bundle exec rails webpacker:install"
             chdir: "{{ app_root }}"
+        when: not installed_webpacker
 
-      - name: assets precompile
+      - name: assets webpacker:compile
         shell:
-            cmd: bash -lc "bundle exec rails assets:precompile"
+            cmd: bash -lc "bundle exec rails webpacker:compile"
             chdir: "{{ app_root }}"
 
       - name: 'make sure env dir'
